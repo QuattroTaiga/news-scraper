@@ -1,67 +1,40 @@
 'use client';
 import Image from 'next/image'
-import { useEffect, useState} from 'react';
-import Parser from 'rss-parser'
-import axios from 'axios'
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import Parser from 'rss-parser';
+import DOMPurify from 'dompurify';
 
 export default function Home() {
   /* Using the use effect hook instead */
 
   const CORS_PROXY = "https://corsproxy.io/?"
-  let Parser = require('rss-parser');
   let parser = new Parser();
-  
+
   const [feed, setFeed] = useState<any>([]);
-  
-
-  // (async () => {
-  //   let feed = await parser.parseURL('https://bigsmithnewswatch.com/feed/')
-  //   console.log(feed)
-  //   feed.items.forEach((item: any) => {
-  //     //console.log(item);
-  //     //setFeed(feed)
-  //   });
-  // })();
-  
-
-  /* The effect hook causes cors */
-//    useEffect(() => {
-//   const fetchData = async () => {
-//     const parser = new Parser();
-//     try {
-//       const feed = await parser.parseURL('https://corsanywhere.herokuapp.com/https://bigsmithnewswatch.com/feed/');
-//       console.log(feed.title);
-//       feed.items.forEach(item => {
-//         console.log(item);
-//       });
-//     } catch (error) {
-//       console.log('Nothing came back', error)
-//     }
-//   };
-//   fetchData();
-//  }, []);
 
 
-async function getFeed() {
-  try {
-    // let feed = await parser.parseURL(`${CORS_PROXY}https://bigsmithnewswatch.com/feed/`);
-    // /* let's keep the most up to date version of the feed */
-    // setFeed(feed)
+  async function getFeed() {
+    try {
 
-    const response = await axios.get(`${CORS_PROXY}https://bigsmithnewswatch.com/feed/`);
-    const parseFeed = await parser.parseString(response.data)
-    //console.log(parseFeed)
-    setFeed(parseFeed.items)
-    console.log(feed)
-  } catch (error) {
-    console.error(error)
+
+      // /* let's keep the most up to date version of the feed */
+      // setFeed(feed)
+
+      const response = await axios.get(`${CORS_PROXY}https://bigsmithnewswatch.com/feed/`);
+      const parseFeed = await parser.parseString(response.data)
+      console.log(parseFeed)
+      setFeed(parseFeed.items)
+      console.log(feed)
+    } catch (error) {
+      console.error(error)
+    }
   }
-}
 
-useEffect(() => {
-  getFeed();
-}, []);
-  
+  useEffect(() => {
+    getFeed();
+  }, []);
+
   return (
     <main className="">
       <nav className='flex items-center justify-between flex-wrap bg-slate-800 p-6'>
@@ -84,23 +57,28 @@ useEffect(() => {
       </nav>
 
       <div>
-            <h1>Feed</h1>
-            {feed.length > 0 ? (
-                <ul>
-                    {feed.map((item:any, index:number) => (
-                        <li key={index}>
-                            <h2>{item.title}</h2>
-                            <p>{item.content}</p>
-                            {/* Add more fields as needed */}
-                        </li>
-                    ))}
-                </ul>
-            ) : (
-                <p>Loading...</p>
-            )}
-        </div>
+        <h1>Feed</h1>
+        {feed.length > 0 ? (
+          <ul>
+            {feed.map((item: any, index: number) => (
+              <li key={index}>
+                <h2>{item.title}</h2>
+                <div
+                  dangerouslySetInnerHTML={{
+                    // Use contentSnippet instead for now
+                    __html: DOMPurify.sanitize(item.contentSnippet),
+                  }}
+                />
 
-    
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>Loading...</p>
+        )}
+      </div>
+
+
 
     </main>
   )
